@@ -44,7 +44,7 @@ if st.sidebar.button("Enter"):
     fig.add_trace(go.Scatter(x=df['Date'], y=df['Low'], mode='lines', name="Min Value", line=dict(color='red')))
 
     # Add SMA
-   df['SMA'] = df['Close'].rolling(window=sma_period).mean()
+    df['SMA'] = df['Close'].rolling(window=sma_period).mean()
     fig.add_trace(go.Scatter(
         x=df['Date'], 
         y=df['SMA'], 
@@ -52,7 +52,6 @@ if st.sidebar.button("Enter"):
         name=f"SMA {sma_period}",
         line=dict(color='yellow')  # Set the line color to yellow
     ))
-
 
     fig.update_layout(title=f"{ticker} Price Chart",
                       xaxis_title="Date",
