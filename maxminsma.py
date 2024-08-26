@@ -35,7 +35,7 @@ if st.sidebar.button("Aplicar"):
     # Gráfico de precios con SMA ajustable
     st.subheader("Gráfico de Precios con Máximo/Mínimo y SMA")
     
-    # Gráficar con Plotly
+    # Graficar con Plotly
     fig = go.Figure()
 
     # Agregar línea de precio
@@ -86,21 +86,23 @@ if st.sidebar.button("Aplicar"):
 
     st.plotly_chart(fig_ratio)
 
-    # Tercer gráfico: SMA y relación de Precio/SMA
-    st.subheader("Gráfico de SMA y Relación Precio/SMA")
-    df['Precio/SMA'] = df['Close'] / df['SMA']
+    # Tercer gráfico: SMA del ratio y relación Precio/SMA
+    st.subheader("SMA del Ratio y Relación Precio/SMA")
 
-    fig_price_sma_ratio = go.Figure()
+    # Calcular la relación Precio/SMA
+    df['Price/SMA'] = df['Close'] / df['SMA']
 
-    # Agregar SMA del Precio
-    fig_price_sma_ratio.add_trace(go.Scatter(x=df['Date'], y=df['SMA'], mode='lines', name=f"SMA {sma_period}", line=dict(color='yellow')))
+    fig_third = go.Figure()
 
-    # Agregar Relación Precio/SMA
-    fig_price_sma_ratio.add_trace(go.Scatter(x=df['Date'], y=df['Precio/SMA'], mode='lines', name="Precio/SMA", line=dict(color='blue')))
+    # Agregar SMA del Ratio del gráfico 2
+    fig_third.add_trace(go.Scatter(x=df['Date'], y=df['SMA_Ratio'], mode='lines', name=f"SMA {sma_period} del Ratio"))
 
-    fig_price_sma_ratio.update_layout(title=f"SMA y Relación Precio/SMA de {ticker}",
-                                      xaxis_title="Fecha",
-                                      yaxis_title="Valor",
-                                      xaxis_rangeslider_visible=False)
+    # Agregar relación Precio/SMA
+    fig_third.add_trace(go.Scatter(x=df['Date'], y=df['Price/SMA'], mode='lines', name="Relación Precio/SMA", line=dict(color='blue')))
 
-    st.plotly_chart(fig_price_sma_ratio)
+    fig_third.update_layout(title=f"SMA del Ratio de {ticker} y Relación Precio/SMA",
+                            xaxis_title="Fecha",
+                            yaxis_title="Valor",
+                            xaxis_rangeslider_visible=False)
+
+    st.plotly_chart(fig_third)
