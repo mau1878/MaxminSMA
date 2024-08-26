@@ -21,7 +21,7 @@ start_date = st.sidebar.date_input("Start date", value=datetime(2020, 1, 1))
 end_date = st.sidebar.date_input("End date", value=datetime.today())
 
 # SMA slider outside the button block to keep it visible
-sma_period = st.sidebar.slider("SMA Period", min_value=1, max_value=100, value=20)
+sma_period = st.sidebar.slider("SMA Period", min_value=1, max_value=200, value=20)
 
 # Button to apply changes
 if st.sidebar.button("Enter"):
