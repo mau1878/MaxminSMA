@@ -54,10 +54,11 @@ if st.sidebar.button("Enter"):
 
     st.plotly_chart(fig)
 
-    # Ratio of Max/Min with SMA
-    st.subheader("Ratio of Max/Min with SMA")
+    # Ratio of Max/Min with SMA and Average
+    st.subheader("Ratio of Max/Min with SMA and Average")
     df['Ratio'] = df['High'] / df['Low']
     df['SMA_Ratio'] = df['Ratio'].rolling(window=sma_period).mean()
+    average_ratio = df['Ratio'].mean()
 
     fig_ratio = go.Figure()
 
@@ -67,7 +68,10 @@ if st.sidebar.button("Enter"):
     # Add SMA of Ratio
     fig_ratio.add_trace(go.Scatter(x=df['Date'], y=df['SMA_Ratio'], mode='lines', name=f"SMA {sma_period} of Ratio"))
 
-    fig_ratio.update_layout(title="Max/Min Ratio with SMA",
+    # Add average line
+    fig_ratio.add_trace(go.Scatter(x=df['Date'], y=[average_ratio]*len(df), mode='lines', name="Average Ratio", line=dict(color='green', dash='dash')))
+
+    fig_ratio.update_layout(title="Max/Min Ratio with SMA and Average",
                             xaxis_title="Date",
                             yaxis_title="Ratio",
                             xaxis_rangeslider_visible=False)
