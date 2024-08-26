@@ -85,3 +85,22 @@ if st.sidebar.button("Aplicar"):
                             xaxis_rangeslider_visible=False)
 
     st.plotly_chart(fig_ratio)
+
+    # Tercer gráfico: SMA y relación de Precio/SMA
+    st.subheader("Gráfico de SMA y Relación Precio/SMA")
+    df['Precio/SMA'] = df['Close'] / df['SMA']
+
+    fig_price_sma_ratio = go.Figure()
+
+    # Agregar SMA del Precio
+    fig_price_sma_ratio.add_trace(go.Scatter(x=df['Date'], y=df['SMA'], mode='lines', name=f"SMA {sma_period}", line=dict(color='yellow')))
+
+    # Agregar Relación Precio/SMA
+    fig_price_sma_ratio.add_trace(go.Scatter(x=df['Date'], y=df['Precio/SMA'], mode='lines', name="Precio/SMA", line=dict(color='blue')))
+
+    fig_price_sma_ratio.update_layout(title=f"SMA y Relación Precio/SMA de {ticker}",
+                                      xaxis_title="Fecha",
+                                      yaxis_title="Valor",
+                                      xaxis_rangeslider_visible=False)
+
+    st.plotly_chart(fig_price_sma_ratio)
