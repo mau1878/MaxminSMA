@@ -31,6 +31,8 @@ if st.sidebar.button("Enter"):
 
     # Price chart with adjustable SMA
     st.subheader("Price Chart with Max/Min and SMA")
+    
+    # Move the SMA slider inside this block
     sma_period = st.sidebar.slider("SMA Period", min_value=1, max_value=100, value=20)
 
     # Plotting with Plotly
