@@ -17,8 +17,9 @@ st.sidebar.header("User Input")
 
 # User input fields
 ticker = st.sidebar.text_input("Ticker", value="AAPL")
-start_date = st.sidebar.date_input("Start date", value=datetime(2020, 1, 1))
-end_date = st.sidebar.date_input("End date", value=datetime.today())
+start_date = st.sidebar.date_input("Start date", value=datetime(2020, 1, 1), min_value=datetime(1990, 1, 1))
+end_date = st.sidebar.date_input("End date", value=datetime.today(), min_value=datetime(1990, 1, 1))
+
 
 # SMA slider outside the button block to keep it visible
 sma_period = st.sidebar.slider("SMA Period", min_value=1, max_value=200, value=20)
