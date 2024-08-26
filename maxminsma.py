@@ -45,13 +45,13 @@ if st.sidebar.button("Enter"):
 
     # Add SMA
    df['SMA'] = df['Close'].rolling(window=sma_period).mean()
-fig.add_trace(go.Scatter(
-    x=df['Date'], 
-    y=df['SMA'], 
-    mode='lines', 
-    name=f"SMA {sma_period}",
-    line=dict(color='yellow')  # Set the line color to yellow
-))
+    fig.add_trace(go.Scatter(
+        x=df['Date'], 
+        y=df['SMA'], 
+        mode='lines', 
+        name=f"SMA {sma_period}",
+        line=dict(color='yellow')  # Set the line color to yellow
+    ))
 
 
     fig.update_layout(title=f"{ticker} Price Chart",
