@@ -7,16 +7,17 @@ from datetime import datetime
 # Función para cargar datos
 @st.cache
 def load_data(ticker, start, end):
-    df = yf.download(ticker, start=start, end=end, progress=False)
-    df.reset_index(inplace=True)
-    return df
+  df = yf.download(ticker, start=start, end=end, progress=False)
+  df.reset_index(inplace=True)
+  return df
 
 # Aplicación de Streamlit
 st.title("Análisis de Precios de Acciones con Máximo/Mínimo y SMA")
 st.sidebar.header("Entrada del Usuario")
 
 # Campos de entrada del usuario
-ticker = st.sidebar.text_input("Símbolo de la acción", value="AAPL")
+ticker_input = st.sidebar.text_input("Símbolo(s) de la acción (separados por comas)", value="AAPL")
+tickers = [t.strip() for t in ticker_input.upper().split(',')]
 start_date = st.sidebar.date_input("Fecha de inicio", value=datetime(2020, 1, 1), min_value=datetime(1990, 1, 1))
 end_date = st.sidebar.date_input("Fecha de fin", value=datetime.today(), min_value=datetime(1990, 1, 1))
 
@@ -25,84 +26,138 @@ sma_period = st.sidebar.slider("Periodo del SMA", min_value=1, max_value=200, va
 
 # Botón para aplicar cambios
 if st.sidebar.button("Aplicar"):
-    # Cargar datos
-    df = load_data(ticker, start_date, end_date)
+  data = {}
 
-    # Mostrar datos y gráfico
-    st.subheader(f"Datos de precios para {ticker} desde {start_date} hasta {end_date}")
-    st.write(df.head())
+  # Cargar datos para cada ticker
+  for ticker in tickers:
+      df = load_data(ticker, start_date, end_date)
+      if not df.empty:
+          data[ticker] = df
+      else:
+          st.warning(f"No se encontraron datos para el símbolo {ticker}")
 
-    # Gráfico de precios con SMA ajustable
-    st.subheader("Gráfico de Precios con Máximo/Mínimo y SMA")
-    
-    # Graficar con Plotly
-    fig = go.Figure()
+  if data:
+      # Gráfico de precios con SMA ajustable (opcional para un solo ticker)
+      if len(tickers) == 1:
+          df = data[tickers[0]]
+          st.subheader(f"Datos de precios para {tickers[0]} desde {start_date} hasta {end_date}")
+          st.write(df.head())
 
-    # Agregar línea de precio
-    fig.add_trace(go.Scatter(x=df['Date'], y=df['Close'], mode='lines', name="Precio"))
+          st.subheader("Gráfico de Precios con Máximo/Mínimo y SMA")
+          
+          # Graficar con Plotly
+          fig = go.Figure()
 
-    # Agregar líneas de máximo y mínimo
-    fig.add_trace(go.Scatter(x=df['Date'], y=df['High'], mode='lines', name="Valor Máximo", line=dict(color='green')))
-    fig.add_trace(go.Scatter(x=df['Date'], y=df['Low'], mode='lines', name="Valor Mínimo", line=dict(color='red')))
+          # Agregar línea de precio
+          fig.add_trace(go.Scatter(x=df['Date'], y=df['Close'], mode='lines', name="Precio"))
 
-    # Agregar SMA
-    df['SMA'] = df['Close'].rolling(window=sma_period).mean()
-    fig.add_trace(go.Scatter(
-        x=df['Date'], 
-        y=df['SMA'], 
-        mode='lines', 
-        name=f"SMA {sma_period}",
-        line=dict(color='yellow')  # Configurar el color de la línea a amarillo
-    ))
+          # Agregar líneas de máximo y mínimo
+          fig.add_trace(go.Scatter(x=df['Date'], y=df['High'], mode='lines', name="Valor Máximo", line=dict(color='green')))
+          fig.add_trace(go.Scatter(x=df['Date'], y=df['Low'], mode='lines', name="Valor Mínimo", line=dict(color='red')))
 
-    fig.update_layout(title=f"Gráfico de Precios de {ticker}",
-                      xaxis_title="Fecha",
-                      yaxis_title="Precio (USD)",
-                      xaxis_rangeslider_visible=False)
+          # Agregar SMA
+          df['SMA'] = df['Close'].rolling(window=sma_period).mean()
+          fig.add_trace(go.Scatter(
+              x=df['Date'], 
+              y=df['SMA'], 
+              mode='lines', 
+              name=f"SMA {sma_period}",
+              line=dict(color='yellow')  # Configurar el color de la línea a amarillo
+          ))
 
-    st.plotly_chart(fig)
-
-    # Ratio de Máximo/Mínimo con SMA y Promedio
-    st.subheader("Ratio de Máximo/Mínimo con SMA y Promedio")
-    df['Ratio'] = df['High'] / df['Low']
-    df['SMA_Ratio'] = df['Ratio'].rolling(window=sma_period).mean()
-    average_ratio = df['Ratio'].mean()
-
-    fig_ratio = go.Figure()
-
-    # Agregar línea de Ratio
-    fig_ratio.add_trace(go.Scatter(x=df['Date'], y=df['Ratio'], mode='lines', name="Ratio Máximo/Mínimo"))
-
-    # Agregar SMA del Ratio
-    fig_ratio.add_trace(go.Scatter(x=df['Date'], y=df['SMA_Ratio'], mode='lines', name=f"SMA {sma_period} del Ratio"))
-
-    # Agregar línea de promedio
-    fig_ratio.add_trace(go.Scatter(x=df['Date'], y=[average_ratio]*len(df), mode='lines', name="Promedio del Ratio", line=dict(color='green', dash='dash')))
-
-    fig_ratio.update_layout(title=f"Ratio Máximo/Mínimo de {ticker} con SMA y Promedio",
+          fig.update_layout(title=f"Gráfico de Precios de {tickers[0]}",
                             xaxis_title="Fecha",
-                            yaxis_title="Ratio",
+                            yaxis_title="Precio (USD)",
                             xaxis_rangeslider_visible=False)
 
-    st.plotly_chart(fig_ratio)
+          st.plotly_chart(fig)
+      else:
+          st.subheader("Múltiples símbolos detectados, omitiendo el gráfico de precios individuales.")
 
-    # Tercer gráfico: SMA del ratio y relación Precio/SMA
-    st.subheader("SMA del Ratio y Relación Precio/SMA")
+      # Ratio de Máximo/Mínimo con SMA y Promedio
+      st.subheader("Ratio de Máximo/Mínimo con SMA y Promedio")
 
-    # Calcular la relación Precio/SMA
-    df['Price/SMA'] = df['Close'] / df['SMA']
+      fig_ratio = go.Figure()
+      
+      # Colores para distinguir cada ticker
+      colors = ['blue', 'orange', 'green', 'red', 'purple', 'brown', 'pink', 'gray', 'olive', 'cyan']
+      
+      for idx, ticker in enumerate(data):
+          df = data[ticker].copy()
+          df['Ratio'] = df['High'] / df['Low']
+          df['SMA_Ratio'] = df['Ratio'].rolling(window=sma_period).mean()
+          average_ratio = df['Ratio'].mean()
 
-    fig_third = go.Figure()
+          color = colors[idx % len(colors)]  # Asignar un color
 
-    # Agregar SMA del Ratio del gráfico 2
-    fig_third.add_trace(go.Scatter(x=df['Date'], y=df['SMA_Ratio'], mode='lines', name=f"SMA {sma_period} del Ratio"))
+          # Agregar línea de Ratio
+          fig_ratio.add_trace(go.Scatter(
+              x=df['Date'], 
+              y=df['Ratio'], 
+              mode='lines', 
+              name=f"Ratio {ticker}",
+              line=dict(color=color)
+          ))
 
-    # Agregar relación Precio/SMA
-    fig_third.add_trace(go.Scatter(x=df['Date'], y=df['Price/SMA'], mode='lines', name="Relación Precio/SMA", line=dict(color='blue')))
+          # Agregar SMA del Ratio
+          fig_ratio.add_trace(go.Scatter(
+              x=df['Date'], 
+              y=df['SMA_Ratio'], 
+              mode='lines', 
+              name=f"SMA {sma_period} del Ratio {ticker}",
+              line=dict(color=color, dash='dash')
+          ))
 
-    fig_third.update_layout(title=f"SMA del Ratio de {ticker} y Relación Precio/SMA",
-                            xaxis_title="Fecha",
-                            yaxis_title="Valor",
-                            xaxis_rangeslider_visible=False)
+          # Agregar línea de promedio
+          fig_ratio.add_trace(go.Scatter(
+              x=df['Date'], 
+              y=[average_ratio]*len(df), 
+              mode='lines', 
+              name=f"Promedio del Ratio {ticker}", 
+              line=dict(color=color, dash='dot')
+          ))
 
-    st.plotly_chart(fig_third)
+      fig_ratio.update_layout(title="Ratio Máximo/Mínimo con SMA y Promedio",
+                              xaxis_title="Fecha",
+                              yaxis_title="Ratio",
+                              xaxis_rangeslider_visible=False)
+
+      st.plotly_chart(fig_ratio)
+
+      # Tercer gráfico: SMA del ratio y relación Precio/SMA
+      st.subheader("SMA del Ratio y Relación Precio/SMA")
+
+      fig_third = go.Figure()
+      for idx, ticker in enumerate(data):
+          df = data[ticker].copy()
+          df['Ratio'] = df['High'] / df['Low']
+          df['SMA_Ratio'] = df['Ratio'].rolling(window=sma_period).mean()
+          df['SMA'] = df['Close'].rolling(window=sma_period).mean()
+          df['Price/SMA'] = df['Close'] / df['SMA']
+
+          color = colors[idx % len(colors)]  # Asignar un color
+
+          # Agregar SMA del Ratio
+          fig_third.add_trace(go.Scatter(
+              x=df['Date'], 
+              y=df['SMA_Ratio'], 
+              mode='lines', 
+              name=f"SMA {sma_period} del Ratio {ticker}",
+              line=dict(color=color)
+          ))
+
+          # Agregar relación Precio/SMA
+          fig_third.add_trace(go.Scatter(
+              x=df['Date'], 
+              y=df['Price/SMA'], 
+              mode='lines', 
+              name=f"Relación Precio/SMA {ticker}",
+              line=dict(color=color, dash='dash')
+          ))
+
+      fig_third.update_layout(title="SMA del Ratio y Relación Precio/SMA",
+                              xaxis_title="Fecha",
+                              yaxis_title="Valor",
+                              xaxis_rangeslider_visible=False)
+
+      st.plotly_chart(fig_third)
